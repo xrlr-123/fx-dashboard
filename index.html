@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>系统分析师 · 学习看板</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="系分看板">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --line:#e5e7eb; --text:#1f2937; --muted:#6b7280;
+    --brand:#2563eb; --brand-soft:#dbeafe; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:14px;line-height:1.5}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px 10px;position:sticky;top:0;z-index:10}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{font-size:17px;margin:0;font-weight:650;letter-spacing:.3px}
+  h1 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+  .kpis{display:flex;gap:18px;flex-wrap:wrap}
+  .kpi{min-width:96px}
+  .kpi .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums}
+  .kpi .l{font-size:11px;color:var(--muted)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--text);
+    padding:5px 10px;border-radius:7px;cursor:pointer}
+  button:hover{border-color:#cbd5e1;background:#fafafa}
+  nav{display:flex;gap:6px;margin-top:10px}
+  nav button{border:1px solid transparent;background:transparent;color:var(--muted);padding:6px 12px;border-radius:7px}
+  nav button.on{background:var(--brand-soft);color:var(--brand);border-color:#bfdbfe;font-weight:600}
+  main{padding:18px 20px 60px;max-width:1180px;margin:0 auto}
+  section{display:none}
+  section.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .mod-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .mod-h .t{font-weight:650}
+  .mod-h .n{color:var(--muted);font-size:12px}
+  .bar{height:8px;background:#eef1f5;border-radius:99px;overflow:hidden;margin:10px 0 8px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);width:0;border-radius:99px;transition:width .25s}
+  .bar.mini{height:6px;margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .chip{font-size:11px;padding:2px 7px;border-radius:99px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+  .chip.done{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+  .muted{color:var(--muted)}
+  .banner{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:8px 12px;border-radius:8px;
+    font-size:12.5px;margin-bottom:14px}
+  .week{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:12px 14px;margin-bottom:12px}
+  .week.past{opacity:.88}
+  .whead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .whead .w{font-weight:650;min-width:46px}
+  .whead .d{color:var(--muted);font-size:12px;min-width:96px}
+  .whead .s{margin-left:auto;font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--muted)}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-top:10px}
+  .v{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;
+    cursor:pointer;background:#fff;font-size:12px}
+  .v:hover{background:#fafafa}
+  .v.on{background:#f0fdf4;border-color:#a7f3d0}
+  .v .box{width:13px;height:13px;border:1.5px solid #cbd5e1;border-radius:4px;flex:0 0 auto;position:relative}
+  .v.on .box{background:var(--ok);border-color:var(--ok)}
+  .v.on .box::after{content:"";position:absolute;left:3.5px;top:1px;width:4px;height:7px;
+    border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+  .v .tt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .v .mm{color:var(--muted);font-variant-numeric:tabular-nums}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  th{background:#f8fafc;font-weight:600;color:#334155;font-size:12px;letter-spacing:.3px}
+  tr:last-child td{border-bottom:0}
+  tr.ch:hover td{background:#fafcff}
+  .cb{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;font-size:12px}
+  .cb .b{width:15px;height:15px;border:1.5px solid #cbd5e1;border-radius:4px;position:relative;background:#fff}
+  .cb.on .b{background:var(--brand);border-color:var(--brand)}
+  .cb.on .b::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+    border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+  .tag{font-size:11px;padding:1px 6px;border-radius:99px;background:#f1f5f9;color:#64748b}
+  .tag.p1{background:#eff6ff;color:#1d4ed8}
+  .tag.p2{background:#fef2f2;color:#b91c1c}
+  .pct{font-variant-numeric:tabular-nums;font-weight:600}
+  footer{padding:10px 20px 30px;text-align:center;color:#9ca3af;font-size:11.5px}
+  .toast{position:fixed;right:18px;bottom:18px;background:#111827;color:#fff;padding:8px 14px;border-radius:8px;
+    font-size:12.5px;opacity:0;transform:translateY(6px);transition:.2s;pointer-events:none}
+  .toast.on{opacity:1;transform:none}
+  @media (max-width:640px){
+    .kpi{min-width:72px}.kpi .v{font-size:16px}
+    th,td{padding:6px 7px;font-size:12px}
+    .hide-sm{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>系统分析师 · 学习看板<small id="phaseTag">阶段 1（11.02—12.20）</small></h1>
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="k1">—</div><div class="l">教材章节总进度</div></div>
+      <div class="kpi"><div class="v" id="k2">—</div><div class="l">阶段 1 视频</div></div>
+      <div class="kpi"><div class="v" id="k3">—</div><div class="l">距考试</div></div>
+    </div>
+    <div class="actions">
+      <button id="btnExport">导出</button>
+      <button id="btnImport">导入</button>
+      <button id="btnReset">重置</button>
+      <input type="file" id="file" accept=".json" style="display:none">
+    </div>
+  </div>
+  <nav>
+    <button data-view="modules" class="on">模块（5）</button>
+    <button data-view="videos">视频（阶段 1）</button>
+    <button data-view="chapters">教材章节（22）</button>
+  </nav>
+</header>
+
+<main>
+  <div id="banner" class="banner" hidden></div>
+
+  <section id="view-modules" class="on">
+    <div id="modGrid" class="grid"></div>
+  </section>
+
+  <section id="view-videos">
+    <div id="vSummary" class="card" style="margin-bottom:14px"></div>
+    <div id="weekList"></div>
+  </section>
+
+  <section id="view-chapters">
+    <div class="card" style="padding:0;overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:52px">章</th>
+            <th>名称</th>
+            <th style="width:78px" class="hide-sm">模块</th>
+            <th style="width:86px" class="hide-sm">视频</th>
+            <th style="width:56px">学</th>
+            <th style="width:56px">图</th>
+            <th style="width:56px">题</th>
+            <th style="width:110px">进度</th>
+          </tr>
+        </thead>
+        <tbody id="chBody"></tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:12px;margin:10px 2px">
+      「学」= 视频或图文学习；「图」= 梳理导图；「题」= 章节刷题（≥70% 正确率）。三项全勾即本章完成。
+    </p>
+  </section>
+</main>
+
+<footer>数据存于本浏览器；换设备请先「导出」，在新设备「导入」。</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"examDate":"2027-05-22","phase1":{"start":"2026-11-02","end":"2026-12-20"},"modules":[{"id":1,"name":"业务基础","desc":"角色定位与业务背景 · ch1 ch6"},{"id":2,"name":"专业基础","desc":"技术底座与计算先行 · ch3 ch4 ch5 ch7 ch8 ch9"},{"id":3,"name":"关键技术","desc":"生命周期与案例主线 · ch10—ch15"},{"id":4,"name":"案例实践","desc":"场景演练与论文提炼 · ch16—ch22"},{"id":5,"name":"补充专题","desc":"记忆考点与计算保底 · 数学 + 知识产权 + 专业英语"}],"chapters":[{"id":"ch1","no":1,"name":"绪论","short":"绪论","module":1,"videos":2,"vmin":32.74,"stage":"p1","extra":false},{"id":"ch2","no":2,"name":"数学与工程基础","short":"数学","module":5,"videos":0,"vmin":0.0,"stage":"p1","extra":false},{"id":"ch3","no":3,"name":"计算机系统","short":"计算机","module":2,"videos":16,"vmin":166.91,"stage":"p1","extra":false},{"id":"ch4","no":4,"name":"计算机网络与分布式系统","short":"网络","module":2,"videos":10,"vmin":141.33,"stage":"p1","extra":false},{"id":"ch5","no":5,"name":"数据库系统","short":"数据库","module":2,"videos":31,"vmin":294.51,"stage":"p1","extra":false},{"id":"ch6","no":6,"name":"企业信息化","short":"信息化","module":1,"videos":3,"vmin":31.42,"stage":"p1","extra":false},{"id":"ch7","no":7,"name":"软件工程","short":"软工","module":2,"videos":13,"vmin":200.46,"stage":"p1","extra":false},{"id":"ch8","no":8,"name":"项目管理","short":"项目管理","module":2,"videos":2,"vmin":33.23,"stage":"p1","extra":false},{"id":"ch9","no":9,"name":"信息安全","short":"信息安全","module":2,"videos":15,"vmin":149.1,"stage":"p1","extra":false},{"id":"ch10","no":10,"name":"系统规划与分析","short":"规划分析","module":3,"videos":0,"vmin":0.0,"stage":"p1","extra":false},{"id":"ch11","no":11,"name":"软件需求工程","short":"需求","module":3,"videos":0,"vmin":0.0,"stage":"p1","extra":false},{"id":"ch12","no":12,"name":"软件架构设计","short":"架构","module":3,"videos":11,"vmin":191.35,"stage":"p1","extra":false},{"id":"ch13","no":13,"name":"系统设计","short":"设计","module":3,"videos":0,"vmin":0.0,"stage":"p1","extra":false},{"id":"ch14","no":14,"name":"软件实现与测试","short":"实现测试","module":3,"videos":0,"vmin":0.0,"stage":"p1","extra":false},{"id":"ch15","no":15,"name":"系统运行与维护","short":"运维","module":3,"videos":0,"vmin":0.0,"stage":"p1","extra":false},{"id":"ch16","no":16,"name":"Web应用系统","short":"Web","module":4,"videos":0,"vmin":0.0,"stage":"late","extra":false},{"id":"ch17","no":17,"name":"嵌入式系统分析与设计","short":"嵌入式","module":4,"videos":4,"vmin":50.22,"stage":"late","extra":false},{"id":"ch18","no":18,"name":"移动应用系统","short":"移动","module":4,"videos":0,"vmin":0.0,"stage":"late","extra":false},{"id":"ch19","no":19,"name":"大数据处理系统","short":"大数据","module":4,"videos":0,"vmin":0.0,"stage":"late","extra":false},{"id":"ch20","no":20,"name":"微服务系统","short":"微服务","module":4,"videos":0,"vmin":0.0,"stage":"late","extra":false},{"id":"ch21","no":21,"name":"信息物理系统","short":"CPS","module":4,"videos":0,"vmin":0.0,"stage":"late","extra":false},{"id":"ch22","no":22,"name":"系统分析师论文写作要点","short":"论文","module":4,"videos":3,"vmin":64.32,"stage":"p1","extra":false},{"id":"t1","no":23,"name":"知识产权与标准化","short":"知识产权","module":5,"videos":5,"vmin":47.09,"stage":"p1","extra":true},{"id":"t2","no":24,"name":"专业英语（待确认是否考）","short":"专业英语","module":5,"videos":0,"vmin":0,"stage":"p1","extra":true},{"id":"x1","no":25,"name":"案例分析导论（考情与方法）","short":"案例导论","module":3,"videos":1,"vmin":10.73,"stage":"p1","extra":true}],"videos":[{"id":"v01_01","talk":1,"sec":1,"title":"系统工程","min":18.57,"ch":"ch1","week":"W1"},{"id":"v01_02","talk":1,"sec":2,"title":"信息系统基础","min":14.17,"ch":"ch1","week":"W1"},{"id":"v01_03","talk":1,"sec":3,"title":"企业信息化","min":20.0,"ch":"ch6","week":"W1"},{"id":"v01_04","talk":1,"sec":4,"title":"信息系统战略规划","min":5.47,"ch":"ch6","week":"W1"},{"id":"v01_05","talk":1,"sec":5,"title":"企业应用集成","min":5.95,"ch":"ch6","week":"W1"},{"id":"v02_01","talk":2,"sec":1,"title":"软件工程-开发模型1","min":33.92,"ch":"ch7","week":"W1"},{"id":"v02_02","talk":2,"sec":2,"title":"软件工程-开发模型2","min":23.77,"ch":"ch7","week":"W1"},{"id":"v02_03","talk":2,"sec":3,"title":"软件工程-需求工程1","min":23.52,"ch":"ch7","week":"W1"},{"id":"v02_04","talk":2,"sec":4,"title":"软件工程-需求工程2","min":7.53,"ch":"ch7","week":"W1"},{"id":"v02_05","talk":2,"sec":5,"title":"软件工程-软件设计1","min":18.23,"ch":"ch7","week":"W1"},{"id":"v02_06","talk":2,"sec":6,"title":"软件工程-软件设计2","min":10.58,"ch":"ch7","week":"W1"},{"id":"v02_07","talk":2,"sec":7,"title":"软件工程-测试1","min":6.23,"ch":"ch7","week":"W1"},{"id":"v02_08","talk":2,"sec":8,"title":"软件工程-测试2","min":12.05,"ch":"ch7","week":"W1"},{"id":"v02_09","talk":2,"sec":9,"title":"软件工程-测试3","min":5.85,"ch":"ch7","week":"W1"},{"id":"v02_10","talk":2,"sec":10,"title":"软件工程-维护","min":7.8,"ch":"ch7","week":"W1"},{"id":"v03_01","talk":3,"sec":1,"title":"项目管理1","min":24.35,"ch":"ch8","week":"W1"},{"id":"v03_02","talk":3,"sec":2,"title":"项目管理2","min":8.88,"ch":"ch8","week":"W1"},{"id":"v04_01","talk":4,"sec":1,"title":"系统设计-基本概念","min":18.3,"ch":"ch12","week":"W1"},{"id":"v04_02","talk":4,"sec":2,"title":"系统设计-架构风格","min":29.78,"ch":"ch12","week":"W1"},{"id":"v04_03","talk":4,"sec":3,"title":"系统设计-基于架构的开发方法","min":9.67,"ch":"ch12","week":"W1"},{"id":"v04_04","talk":4,"sec":4,"title":"系统设计-特定领域架构","min":12.08,"ch":"ch12","week":"W1"},{"id":"v04_05","talk":4,"sec":5,"title":"系统设计-软件架构评估","min":25.65,"ch":"ch12","week":"W1"},{"id":"v04_06","talk":4,"sec":6,"title":"系统设计-软件产品线","min":6.9,"ch":"ch12","week":"W1"},{"id":"v04_07","talk":4,"sec":7,"title":"系统设计-构件与中间件","min":27.78,"ch":"ch4","week":"W2"},{"id":"v05_00","talk":5,"sec":0,"title":"系统可靠性分析与设计","min":14.25,"ch":"ch9","week":"W2"},{"id":"v06_01","talk":6,"sec":1,"title":"信息安全-信息安全介绍","min":11.3,"ch":"ch9","week":"W2"},{"id":"v06_02","talk":6,"sec":2,"title":"信息安全-信息加解密技术","min":12.57,"ch":"ch9","week":"W2"},{"id":"v06_03","talk":6,"sec":3,"title":"信息安全-访问控制与数字签名1","min":14.87,"ch":"ch9","week":"W2"},{"id":"v06_04","talk":6,"sec":4,"title":"信息安全-访问控制与数字签名2","min":14.77,"ch":"ch9","week":"W2"},{"id":"v06_05","talk":6,"sec":5,"title":"信息安全-密钥管理技术","min":14.12,"ch":"ch9","week":"W2"},{"id":"v06_06","talk":6,"sec":6,"title":"信息安全-信息安全保障体系","min":4.87,"ch":"ch9","week":"W2"},{"id":"v07_01","talk":7,"sec":1,"title":"第7章思维导图说明","min":1.63,"ch":"ch9","week":"W2"},{"id":"v07_02","talk":7,"sec":2,"title":"安全架构理论与实践","min":14.52,"ch":"ch9","week":"W2"},{"id":"v07_03","talk":7,"sec":3,"title":"安全模型","min":13.1,"ch":"ch9","week":"W2"},{"id":"v07_04","talk":7,"sec":4,"title":"安全模型真题讲解","min":1.52,"ch":"ch9","week":"W2"},{"id":"v07_05","talk":7,"sec":5,"title":"信息安全整体架构设计","min":3.53,"ch":"ch9","week":"W2"},{"id":"v07_06","talk":7,"sec":6,"title":"网络安全体系架构设计","min":9.92,"ch":"ch9","week":"W2"},{"id":"v07_07","talk":7,"sec":7,"title":"网络安全架构真题讲解","min":3.28,"ch":"ch9","week":"W2"},{"id":"v07_08","talk":7,"sec":8,"title":"区块链技术","min":14.85,"ch":"ch9","week":"W2"},{"id":"v08_01","talk":8,"sec":1,"title":"计算机基础知识-系统概述","min":4.53,"ch":"ch3","week":"W2"},{"id":"v08_02","talk":8,"sec":2,"title":"计算机基础知识-流水线","min":20.02,"ch":"ch3","week":"W2"},{"id":"v08_03","talk":8,"sec":3,"title":"计算机基础知识-cache","min":16.75,"ch":"ch3","week":"W2"},{"id":"v08_04","talk":8,"sec":4,"title":"计算机基础知识-磁盘管理","min":11.32,"ch":"ch3","week":"W2"},{"id":"v08_05","talk":8,"sec":5,"title":"操作系统-概述","min":4.73,"ch":"ch3","week":"W2"},{"id":"v08_06","talk":8,"sec":6,"title":"操作系统-进程线程","min":8.2,"ch":"ch3","week":"W2"},{"id":"v08_07","talk":8,"sec":7,"title":"操作系统-信号量","min":12.55,"ch":"ch3","week":"W2"},{"id":"v08_08","talk":8,"sec":8,"title":"操作系统-进程状态","min":3.28,"ch":"ch3","week":"W2"},{"id":"v08_09","talk":8,"sec":9,"title":"操作系统-前驱图","min":10.33,"ch":"ch3","week":"W2"},{"id":"v08_10","talk":8,"sec":10,"title":"操作系统-银行家算法","min":9.95,"ch":"ch3","week":"W2"},{"id":"v08_11","talk":8,"sec":11,"title":"操作系统-页式存储","min":13.18,"ch":"ch3","week":"W2"},{"id":"v08_12","talk":8,"sec":12,"title":"操作系统-段式存储","min":4.87,"ch":"ch3","week":"W2"},{"id":"v08_13","talk":8,"sec":13,"title":"操作系统-段页式存储","min":4.17,"ch":"ch3","week":"W2"},{"id":"v08_14","talk":8,"sec":14,"title":"操作系统-文件管理","min":12.63,"ch":"ch3","week":"W3"},{"id":"v08_15","talk":8,"sec":15,"title":"计算机基础知识-性能指标","min":15.23,"ch":"ch3","week":"W3"},{"id":"v08_16","talk":8,"sec":16,"title":"计算机基础知识-性能评价","min":15.17,"ch":"ch3","week":"W3"},{"id":"v09_01","talk":9,"sec":1,"title":"嵌入式系统-嵌入式硬件","min":14.0,"ch":"ch17","week":"W3"},{"id":"v09_02","talk":9,"sec":2,"title":"嵌入式系统-嵌入式软件","min":11.62,"ch":"ch17","week":"W3"},{"id":"v09_03","talk":9,"sec":3,"title":"嵌入式系统-嵌入式操作系统","min":17.58,"ch":"ch17","week":"W3"},{"id":"v09_04","talk":9,"sec":4,"title":"嵌入式系统-嵌入式数据库","min":7.02,"ch":"ch17","week":"W3"},{"id":"v10_01","talk":10,"sec":1,"title":"计算机网络-概述","min":9.17,"ch":"ch4","week":"W3"},{"id":"v10_02","talk":10,"sec":2,"title":"计算机网络-组网技术","min":17.78,"ch":"ch4","week":"W3"},{"id":"v10_03","talk":10,"sec":3,"title":"计算机网络-TCP/IP协议族","min":25.75,"ch":"ch4","week":"W3"},{"id":"v10_04","talk":10,"sec":4,"title":"计算机网络-DHCP","min":9.25,"ch":"ch4","week":"W3"},{"id":"v10_05","talk":10,"sec":5,"title":"计算机网络-DNS","min":13.82,"ch":"ch4","week":"W3"},{"id":"v10_06","talk":10,"sec":6,"title":"计算机网络-IPv6","min":12.85,"ch":"ch4","week":"W3"},{"id":"v10_07","talk":10,"sec":7,"title":"计算机网络-网络冗余设计","min":6.93,"ch":"ch4","week":"W3"},{"id":"v10_08","talk":10,"sec":8,"title":"计算机网络-网络规划与设计","min":12.98,"ch":"ch4","week":"W3"},{"id":"v10_09","talk":10,"sec":9,"title":"计算机网络-层次化网络设计","min":5.02,"ch":"ch4","week":"W3"},{"id":"v11_01","talk":11,"sec":1,"title":"数据库系统-数据库模式","min":12.53,"ch":"ch5","week":"W3"},{"id":"v11_02","talk":11,"sec":2,"title":"数据库系统-分布式数据库","min":20.45,"ch":"ch5","week":"W3"},{"id":"v11_03","talk":11,"sec":3,"title":"数据库系统-分布式数据库真题","min":3.87,"ch":"ch5","week":"W3"},{"id":"v11_04","talk":11,"sec":4,"title":"数据库系统-数据库设计阶段","min":6.9,"ch":"ch5","week":"W3"},{"id":"v11_05","talk":11,"sec":5,"title":"数据库系统-概念结构设计及真题","min":17.0,"ch":"ch5","week":"W3"},{"id":"v11_06","talk":11,"sec":6,"title":"数据库系统-关系模式","min":12.88,"ch":"ch5","week":"W4"},{"id":"v11_07","talk":11,"sec":7,"title":"数据库系统-逻辑结构设计","min":18.47,"ch":"ch5","week":"W4"},{"id":"v11_08","talk":11,"sec":8,"title":"数据库系统-关系代数","min":20.15,"ch":"ch5","week":"W4"},{"id":"v11_09","talk":11,"sec":9,"title":"数据库系统-非规范化存在的问题","min":3.25,"ch":"ch5","week":"W4"},{"id":"v11_10","talk":11,"sec":10,"title":"数据库系统-关系代数真题讲解","min":9.75,"ch":"ch5","week":"W4"},{"id":"v11_11","talk":11,"sec":11,"title":"数据库系统-规范化理论1","min":8.77,"ch":"ch5","week":"W4"},{"id":"v11_12","talk":11,"sec":12,"title":"数据库系统-规范化理论2","min":6.83,"ch":"ch5","week":"W4"},{"id":"v11_13","talk":11,"sec":13,"title":"数据库系统-规范化理论3","min":1.58,"ch":"ch5","week":"W4"},{"id":"v11_14","talk":11,"sec":14,"title":"数据库系统-ArmStrong公理系统","min":7.13,"ch":"ch5","week":"W4"},{"id":"v11_15","talk":11,"sec":15,"title":"数据库系统-范式判断1","min":14.72,"ch":"ch5","week":"W4"},{"id":"v11_16","talk":11,"sec":16,"title":"数据库系统-范式判断2","min":5.9,"ch":"ch5","week":"W4"},{"id":"v11_17","talk":11,"sec":17,"title":"数据库系统-模式分解1","min":8.53,"ch":"ch5","week":"W4"},{"id":"v11_18","talk":11,"sec":18,"title":"数据库系统-模式分解2","min":7.58,"ch":"ch5","week":"W4"},{"id":"v11_19","talk":11,"sec":19,"title":"数据库系统-模式分解3","min":9.27,"ch":"ch5","week":"W4"},{"id":"v11_20","talk":11,"sec":20,"title":"数据库系统-模式分解真题讲解","min":12.12,"ch":"ch5","week":"W4"},{"id":"v11_21","talk":11,"sec":21,"title":"数据库系统-数据库事务","min":5.78,"ch":"ch5","week":"W4"},{"id":"v11_22","talk":11,"sec":22,"title":"数据库系统-并发下的数据问题","min":5.17,"ch":"ch5","week":"W4"},{"id":"v11_23","talk":11,"sec":23,"title":"数据库系统-封锁协议","min":12.3,"ch":"ch5","week":"W4"},{"id":"v11_24","talk":11,"sec":24,"title":"数据库系统-数据库安全","min":7.57,"ch":"ch5","week":"W4"},{"id":"v13_01","talk":13,"sec":1,"title":"知识产权与标准化-保护范围/对象","min":10.17,"ch":"t1","week":"W4"},{"id":"v13_02","talk":13,"sec":2,"title":"知识产权与标准化-保护期限","min":8.57,"ch":"t1","week":"W4"},{"id":"v13_03","talk":13,"sec":3,"title":"知识产权与标准化-产权人确定","min":11.88,"ch":"t1","week":"W4"},{"id":"v13_04","talk":13,"sec":4,"title":"知识产权与标准化-侵权判定","min":8.92,"ch":"t1","week":"W4"},{"id":"v13_05","talk":13,"sec":5,"title":"知识产权与标准化-侵权判定真题","min":7.55,"ch":"t1","week":"W4"},{"id":"v14_01","talk":14,"sec":1,"title":"案例分析-考情分析","min":10.73,"ch":"x1","week":"W5"},{"id":"v14_02","talk":14,"sec":2,"title":"案例分析-软件工程1","min":12.3,"ch":"ch7","week":"W5"},{"id":"v14_03","talk":14,"sec":3,"title":"案例分析-软件工程2","min":9.03,"ch":"ch7","week":"W5"},{"id":"v14_04","talk":14,"sec":4,"title":"案例分析-软件工程3","min":29.65,"ch":"ch7","week":"W5"},{"id":"v14_05","talk":14,"sec":5,"title":"案例分析-架构设计1","min":12.0,"ch":"ch12","week":"W5"},{"id":"v14_06","talk":14,"sec":6,"title":"案例分析-架构设计2","min":25.17,"ch":"ch12","week":"W5"},{"id":"v14_07","talk":14,"sec":7,"title":"案例分析-架构设计3","min":15.95,"ch":"ch12","week":"W5"},{"id":"v14_08","talk":14,"sec":8,"title":"案例分析-架构设计4","min":22.73,"ch":"ch12","week":"W5"},{"id":"v14_09","talk":14,"sec":9,"title":"案例分析-架构设计5","min":13.12,"ch":"ch12","week":"W5"},{"id":"v14_10","talk":14,"sec":10,"title":"案例分析-数据库1","min":1.82,"ch":"ch5","week":"W5"},{"id":"v14_11","talk":14,"sec":11,"title":"案例分析-数据库2","min":11.85,"ch":"ch5","week":"W5"},{"id":"v14_12","talk":14,"sec":12,"title":"案例分析-数据库3","min":10.02,"ch":"ch5","week":"W5"},{"id":"v14_13","talk":14,"sec":13,"title":"案例分析-数据库4","min":3.88,"ch":"ch5","week":"W5"},{"id":"v14_14","talk":14,"sec":14,"title":"案例分析-数据库5","min":8.13,"ch":"ch5","week":"W5"},{"id":"v14_15","talk":14,"sec":15,"title":"案例分析-数据库6","min":12.33,"ch":"ch5","week":"W5"},{"id":"v14_16","talk":14,"sec":16,"title":"案例分析-数据库7","min":7.98,"ch":"ch5","week":"W5"},{"id":"v15_01","talk":15,"sec":1,"title":"论文-考情分析","min":21.82,"ch":"ch22","week":"W5"},{"id":"v15_02","talk":15,"sec":2,"title":"论文-论文素材","min":26.97,"ch":"ch22","week":"W5"},{"id":"v15_03","talk":15,"sec":3,"title":"论文-真题解析","min":15.53,"ch":"ch22","week":"W5"}],"weeks":[{"id":"W1","label":"11.02—11.08","start":"2026-11-02","end":"2026-11-08","cap":9},{"id":"W2","label":"11.09—11.15","start":"2026-11-09","end":"2026-11-15","cap":9},{"id":"W3","label":"11.16—11.22","start":"2026-11-16","end":"2026-11-22","cap":9},{"id":"W4","label":"11.23—11.29","start":"2026-11-23","end":"2026-11-29","cap":9},{"id":"W5","label":"11.30—12.06","start":"2026-11-30","end":"2026-12-06","cap":9},{"id":"W6","label":"12.07—12.13","start":"2026-12-07","end":"2026-12-13","cap":9},{"id":"W7","label":"12.14—12.20","start":"2026-12-14","end":"2026-12-20","cap":4}],"tasks":[{"week":"W4","ch":"ch10","hours":5},{"week":"W5","ch":"ch11","hours":4.5},{"week":"W6","ch":"ch13","hours":3.5},{"week":"W6","ch":"ch14","hours":3.5},{"week":"W7","ch":"ch15","hours":2}]};
+
+const KEY = "fx_dashboard_v1";
+const $ = (s, r = document) => r.querySelector(s);
+const nowDate = () => (typeof window !== "undefined" && window.__NOW__) ? new Date(window.__NOW__) : new Date();
+const el = (t, cls, html) => { const n = document.createElement(t); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
+const fmtH = m => m ? (m / 60).toFixed(1).replace(/\.0$/, "") + "h" : "0h";
+const mmss = m => { const t = Math.round(m * 60); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+
+let state = { v: {}, c: {}, ts: new Date().toISOString() };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { const p = JSON.parse(raw); if (p && p.v && p.c) state = p; }
+  } catch (e) { toast("读取本地数据失败，已用空进度"); }
+}
+function save() {
+  state.ts = new Date().toISOString();
+  try { localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch (e) { toast("无法保存（浏览器限制），请用「导出」备份"); }
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 1800);
+}
+
+const chapById = Object.fromEntries(DATA.chapters.map(c => [c.id, c]));
+const modById = Object.fromEntries(DATA.modules.map(m => [m.id, m]));
+const videosOf = ch => DATA.videos.filter(v => v.ch === ch);
+
+function chapProg(ch) {
+  const s = state.c[ch.id] || {};
+  return (Number(!!s.s) + Number(!!s.g) + Number(!!s.q)) / 3;
+}
+function modProg(m) {
+  const list = DATA.chapters.filter(c => c.module === m.id);
+  if (!list.length) return { p: 0, n: 0, done: 0 };
+  const p = list.reduce((a, c) => a + chapProg(c), 0) / list.length;
+  const main = list.filter(c => !c.extra);
+  const done = main.filter(c => chapProg(c) === 1).length;
+  return { p, n: main.length, done };
+}
+function videoProg() {
+  const total = DATA.videos.length, done = DATA.videos.filter(v => state.v[v.id]).length;
+  const mins = DATA.videos.reduce((a, v) => a + v.min, 0);
+  const doneMin = DATA.videos.filter(v => state.v[v.id]).reduce((a, v) => a + v.min, 0);
+  return { total, done, mins, doneMin };
+}
+
+/* ---------- KPI ---------- */
+function renderKpi() {
+  const cs = DATA.chapters.filter(c => !c.extra);
+  const all = cs.length;
+  const done = cs.filter(c => chapProg(c) === 1).length;
+  const overall = cs.reduce((a, c) => a + chapProg(c), 0) / all;
+  $("#k1").textContent = Math.round(overall * 100) + "%";
+  $("#k1").title = `已完成 ${done}/${all} 章`;
+
+  const v = videoProg();
+  $("#k2").textContent = v.done + "/" + v.total;
+
+  const exam = new Date(DATA.examDate + "T00:00:00");
+  const now = nowDate();
+  const days = Math.ceil((exam - now) / 86400000);
+  $("#k3").textContent = days > 0 ? days + " 天" : "已开考";
+  $("#k3").title = "考试日期（预计）：" + DATA.examDate;
+
+  const p1End = new Date(DATA.phase1.end + "T23:59:59");
+  const over = now > p1End;
+  $("#phaseTag").textContent = over ? "阶段 1 已结束（视频视图转为归档）" : "阶段 1（11.02—12.20）";
+  const b = $("#banner");
+  if (over) {
+    b.hidden = false;
+    b.textContent = "阶段 1 已结束：视频视图仅供归档查看；后续进度请在「教材章节」维护。";
+  } else { b.hidden = true; }
+}
+
+/* ---------- 模块 ---------- */
+function renderModules() {
+  const box = $("#modGrid"); box.innerHTML = "";
+  for (const m of DATA.modules) {
+    const list = DATA.chapters.filter(c => c.module === m.id);
+    const pr = modProg(m);
+    const vids = list.reduce((a, c) => a + c.videos, 0);
+    const mins = list.reduce((a, c) => a + c.vmin, 0);
+
+    const card = el("div", "card");
+    card.innerHTML = `
+      <div class="mod-h">
+        <div><span class="t">模块 ${m.id} · ${m.name}</span></div>
+        <div class="n">${pr.done}/${pr.n} 章</div>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:2px">${m.desc}</div>
+      <div class="bar"><i style="width:${Math.round(pr.p * 100)}%"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px">
+        <span class="pct">${Math.round(pr.p * 100)}%</span>
+        <span class="muted">${vids} 个视频 · ${fmtH(mins)}</span>
+      </div>
+      <div class="chips"></div>`;
+    const chips = card.querySelector(".chips");
+    for (const c of list) {
+      const p = chapProg(c);
+      const label = (c.extra ? "" : "ch" + c.no + " ") + c.short;
+      const ch = el("span", "chip" + (p === 1 ? " done" : ""), label);
+      ch.title = c.name + " · " + Math.round(p * 100) + "%";
+      chips.appendChild(ch);
+    }
+    box.appendChild(card);
+  }
+}
+
+/* ---------- 视频 ---------- */
+function renderVideos() {
+  const v = videoProg();
+  const s = $("#vSummary");
+  s.innerHTML = `
+    <div class="mod-h">
+      <div class="t">阶段 1 视频总进度</div>
+      <div class="n">${v.done}/${v.total} 个 · ${fmtH(v.doneMin)}/${fmtH(v.mins)}</div>
+    </div>
+    <div class="bar"><i style="width:${pct(v.done, v.total)}%"></i></div>
+    <div class="muted" style="font-size:12px">
+      视频只覆盖 11 章；ch10/11/13/14/15 用图文与教材补，进度请在「教材章节」勾「学」。
+    </div>`;
+
+  const wrap = $("#weekList"); wrap.innerHTML = "";
+  const now = nowDate();
+
+  for (const w of DATA.weeks) {
+    const vids = DATA.videos.filter(x => x.week === w.id);
+    const wMin = vids.reduce((a, x) => a + x.min, 0);
+    const wDone = vids.filter(x => state.v[x.id]);
+    const wDoneMin = wDone.reduce((a, x) => a + x.min, 0);
+    const tasks = DATA.tasks.filter(t => t.week === w.id);
+
+    const box = el("div", "week" + (now > new Date(w.end + "T23:59:59") ? " past" : ""));
+    const head = el("div", "whead");
+    head.innerHTML = `
+      <span class="w">${w.id}</span>
+      <span class="d">${w.label}</span>
+      <span class="tag">容量 ${w.cap}h</span>
+      <span class="s">${vids.length ? `${wDone.length}/${vids.length} 个 · ${fmtH(wDoneMin)}/${fmtH(wMin)}` : "无新视频"}</span>`;
+    box.appendChild(head);
+
+    if (vids.length) {
+      const bar = el("div", "bar mini");
+      bar.innerHTML = `<i style="width:${pct(wDone.length, vids.length)}%"></i>`;
+      box.appendChild(bar);
+      const g = el("div", "vgrid");
+      for (const x of vids) {
+        const d = el("div", "v" + (state.v[x.id] ? " on" : ""));
+        d.innerHTML = `<span class="box"></span><span class="tt" title="${x.title}">${x.title}</span><span class="mm">${mmss(x.min)}</span>`;
+        d.onclick = () => { state.v[x.id] ? delete state.v[x.id] : state.v[x.id] = 1; save(); renderAll(); };
+        g.appendChild(d);
+      }
+      box.appendChild(g);
+    }
+
+    if (tasks.length) {
+      for (const t of tasks) {
+        const c = chapById[t.ch];
+        const on = !!(state.c[t.ch] && state.c[t.ch].s);
+        const row = el("div", "v" + (on ? " on" : ""));
+        row.style.marginTop = "8px";
+        row.innerHTML = `<span class="box"></span><span class="tt">补 ${t.ch} ${c ? c.name : ""} · ${t.hours}h</span><span class="mm">图文/教材</span>`;
+        row.onclick = () => { setChap(t.ch, "s", !on); };
+        box.appendChild(row);
+      }
+    }
+    wrap.appendChild(box);
+  }
+}
+
+/* ---------- 章节 ---------- */
+function setChap(id, k, val) {
+  state.c[id] = state.c[id] || {};
+  if (val) state.c[id][k] = 1; else delete state.c[id][k];
+  save(); renderAll();
+}
+function renderChapters() {
+  const body = $("#chBody"); body.innerHTML = "";
+  for (const c of DATA.chapters.filter(x => !x.extra)) {
+    const s = state.c[c.id] || {};
+    const p = chapProg(c);
+    const tr = el("tr", "ch");
+    tr.innerHTML = `
+      <td class="muted">${c.no}</td>
+      <td>${c.name} ${c.stage === "late" ? '<span class="tag p2">阶段 2 后</span>' : ""}</td>
+      <td class="hide-sm"><span class="tag">M${c.module}</span></td>
+      <td class="hide-sm muted">${c.videos ? c.videos + " 个 · " + fmtH(c.vmin) : "—"}</td>
+      <td><span class="cb ${s.s ? "on" : ""}" data-k="s"><span class="b"></span>学</span></td>
+      <td><span class="cb ${s.g ? "on" : ""}" data-k="g"><span class="b"></span>图</span></td>
+      <td><span class="cb ${s.q ? "on" : ""}" data-k="q"><span class="b"></span>题</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="bar mini" style="flex:1"><i style="width:${Math.round(p * 100)}%"></i></div>
+          <span class="pct" style="font-size:12px">${Math.round(p * 100)}%</span>
+        </div>
+      </td>`;
+    tr.querySelectorAll(".cb").forEach(cb => {
+      cb.onclick = () => { const k = cb.dataset.k; const cur = !!s[k]; setChap(c.id, k, !cur); };
+    });
+    body.appendChild(tr);
+  }
+}
+
+/* ---------- 主渲染 ---------- */
+function renderAll() { renderKpi(); renderModules(); renderVideos(); renderChapters(); }
+
+/* ---------- 交互 ---------- */
+function showView(name) {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x.dataset.view === name));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === "view-" + name));
+}
+document.querySelectorAll("nav button").forEach(b => {
+  b.onclick = () => { showView(b.dataset.view); history.replaceState(null, "", "#" + b.dataset.view); };
+});
+$("#btnExport").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "看板进度-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click(); URL.revokeObjectURL(a.href);
+  toast("已导出");
+};
+$("#btnImport").onclick = () => $("#file").click();
+$("#file").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const p = JSON.parse(r.result);
+      if (!p || typeof p !== "object" || !p.c) throw new Error("格式不对");
+      state = { v: p.v || {}, c: p.c || {}, ts: p.ts };
+      save(); renderAll(); toast("已导入");
+    } catch (err) { toast("导入失败：不是有效的看板文件"); }
+  };
+  r.readAsText(f); e.target.value = "";
+};
+$("#btnReset").onclick = () => {
+  if (!confirm("确认清空所有进度？此操作不可撤销（建议先导出）。")) return;
+  state = { v: {}, c: {}, ts: new Date().toISOString() };
+  save(); renderAll(); toast("已重置");
+};
+
+/* ---------- 启动 ---------- */
+load();
+renderAll();
+(function initView() {
+  const h = (location.hash || "").replace("#", "");
+  if (["modules", "videos", "chapters"].includes(h)) showView(h);
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
